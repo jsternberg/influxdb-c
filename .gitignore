@@ -1,0 +1,13 @@
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+DartConfiguration.tcl
+Makefile
+Testing/
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+libinfluxdb.a
+libinfluxdb.*so
+libinfluxdb.*dylib
+influxdb_test
