@@ -6,7 +6,12 @@ project(influxdb)
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
-set(INFLUXDB_SOURCES client.c)
+set(INFLUXDB_SOURCES
+  client.c
+  point.c
+  protocol.c
+  buffer.c
+)
 
 add_library(influxdb ${INFLUXDB_SOURCES})
 target_link_libraries(influxdb ${CURL_LIBRARIES})
