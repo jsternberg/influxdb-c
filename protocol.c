@@ -47,6 +47,13 @@ static int influxdb_protocol_v1_encode(void *data, influxdb_writer_t *w, influxd
   influxdb_sbuffer_init(&buf);
 
   influxdb_sbuffer_printf(&buf, "%s", pt->name);
+  if (pt->tags.len > 0) {
+    size_t len = pt->tags.len;
+    for (int i = 0; i < len; i++) {
+      influxdb_tag_t *kv = &pt->tags.data[i];
+      influxdb_sbuffer_printf(&buf, ",%s=%s", kv->key, kv->value);
+    }
+  }
   influxdb_sbuffer_printf(&buf, " ");
 
   size_t len = pt->fields.len;
@@ -55,18 +62,18 @@ static int influxdb_protocol_v1_encode(void *data, influxdb_writer_t *w, influxd
       influxdb_sbuffer_printf(&buf, ",");
     }
 
-    influxdb_kv_pair *kv = &pt->fields.data[i];
+    influxdb_field_t *kv = &pt->fields.data[i];
     switch (kv->vtype) {
-      case FLOAT:
+      case INFLUXDB_TYPE_FLOAT:
         influxdb_sbuffer_printf(&buf, "%s=%f", kv->key, kv->value.d);
         break;
-      case INTEGER:
+      case INFLUXDB_TYPE_INTEGER:
         influxdb_sbuffer_printf(&buf, "%s=%di", kv->key, kv->value.i);
         break;
-      case STRING:
+      case INFLUXDB_TYPE_STRING:
         influxdb_sbuffer_printf(&buf, "%s=\"%s\"", kv->key, kv->value.s);
         break;
-      case BOOL:
+      case INFLUXDB_TYPE_BOOL:
         if (kv->value.i) {
           influxdb_sbuffer_printf(&buf, "%s=t", kv->key);
         } else {
@@ -81,31 +88,6 @@ static int influxdb_protocol_v1_encode(void *data, influxdb_writer_t *w, influxd
   int ret = w->write(w->data, buf.data, buf.len);
   influxdb_sbuffer_destroy(&buf);
   return ret;
-  /*
-  if (pt->tags.len > 0) {
-    size_t len = pt->tags.len;
-    for (int i = 0; i < len; i++) {
-      influxdb_kv_pair *kv = &pt->tags.data[i];
-      switch (kv->vtype) {
-        case FLOAT:
-          fprintf(stream, ",%s=%f", kv->key, kv->value.d);
-        case INTEGER:
-          fprintf(stream, ",%s=%di", kv->key, kv->value.i);
-        case STRING:
-          fprintf(stream, ",%s=\"%s\"", kv->key, kv->value.s);
-        case BOOL:
-          if (kv->value.i) {
-            fprintf(stream, ",%s=t", kv->key);
-          } else {
-            fprintf(stream, ",%s=t", kv->key);
-          }
-        default:
-          return -1;
-      }
-    }
-  }
-  fprintf(stream, " ");
-  */
 }
 
 static void influxdb_protocol_v1_free(void *data) {

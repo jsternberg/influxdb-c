@@ -30,11 +30,34 @@ TEST_CASE( "write a point - line protocol v1", "[line-protocol]" ) {
   memset(&point, 0, sizeof(influxdb_point_t));
   point.name = "cpu";
 
-  influxdb_kv_pair fields[1];
-  fields[0].key = "value";
-  fields[0].vtype = influxdb_kv_pair::FLOAT;
-  fields[0].value.d = 2.5;
-  point.fields = influxdb_kv_list(fields, 1);
+  influxdb_field_t fields[1];
+  fields[0] = influxdb_float("value", 2.5);
+  point.fields = influxdb_fields(fields, 1);
+
+  influxdb_protocol_encode(protocol, &writer, &point);
+  influxdb_protocol_cleanup(protocol);
+}
+
+TEST_CASE( "write a point with tags - line protocol v1", "[line-protocol]" ) {
+  influxdb_protocol_t *protocol = influxdb_protocol_v1();
+  REQUIRE( protocol != NULL );
+
+  influxdb_writer_t writer;
+  writer.data = stdout;
+  writer.write = write_to_stream;
+
+  influxdb_point_t point;
+  memset(&point, 0, sizeof(influxdb_point_t));
+  point.name = "cpu";
+
+  influxdb_tag_t tags[2];
+  tags[0] = influxdb_tag("host", "server01");
+  tags[1] = influxdb_tag("region", "uswest");
+  point.tags = influxdb_tags(tags, 2);
+
+  influxdb_field_t fields[1];
+  fields[0] = influxdb_float("value", 2.5);
+  point.fields = influxdb_fields(fields, 1);
 
   influxdb_protocol_encode(protocol, &writer, &point);
   influxdb_protocol_cleanup(protocol);

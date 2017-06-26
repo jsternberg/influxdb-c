@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,15 +73,75 @@ influxdb_status_t *influxdb_status(influxdb_client_t *self);
  */
 void influxdb_status_cleanup(influxdb_status_t *self);
 
-typedef struct influxdb_kv_pair {
+typedef struct influxdb_tag_t {
   const char *key;
-  enum { UNKNOWN = 0, FLOAT, INTEGER, STRING, BOOL } vtype;
+  const char *value;
+} influxdb_tag_t;
+
+static inline influxdb_tag_t influxdb_tag(const char *key, const char *value) {
+  influxdb_tag_t kv = { key, value };
+  return kv;
+}
+
+typedef struct influxdb_tags_t {
+  influxdb_tag_t *data;
+  size_t len;
+} influxdb_tags_t;
+
+static inline influxdb_tags_t influxdb_tags(influxdb_tag_t *data, size_t len) {
+  influxdb_tags_t tags = { data, len };
+  return tags;
+}
+
+typedef enum {
+  INFLUXDB_TYPE_UNKNOWN = 0,
+  INFLUXDB_TYPE_FLOAT,
+  INFLUXDB_TYPE_INTEGER,
+  INFLUXDB_TYPE_STRING,
+  INFLUXDB_TYPE_BOOL,
+} influxdb_field_type_t;
+
+typedef struct influxdb_field_t {
+  const char *key;
+  influxdb_field_type_t vtype;
   union {
     int i; // This is reused for bool.
     double d;
     const char *s;
   } value;
-} influxdb_kv_pair;
+} influxdb_field_t;
+
+static inline influxdb_field_t influxdb_float(const char *key, double value) {
+  influxdb_field_t kv;
+  kv.key = key;
+  kv.vtype = INFLUXDB_TYPE_FLOAT;
+  kv.value.d = value;
+  return kv;
+}
+
+static inline influxdb_field_t influxdb_integer(const char *key, int64_t value) {
+  influxdb_field_t kv;
+  kv.key = key;
+  kv.vtype = INFLUXDB_TYPE_INTEGER;
+  kv.value.i = value;
+  return kv;
+}
+
+static inline influxdb_field_t influxdb_string(const char *key, const char *value) {
+  influxdb_field_t kv;
+  kv.key = key;
+  kv.vtype = INFLUXDB_TYPE_STRING;
+  kv.value.s = value;
+  return kv;
+}
+
+static inline influxdb_field_t influxdb_boolean(const char *key, bool value) {
+  influxdb_field_t kv;
+  kv.key = key;
+  kv.vtype = INFLUXDB_TYPE_BOOL;
+  kv.value.i = value;
+  return kv;
+}
 
 /*
  * NAME influxdb_kv_list_t
@@ -88,21 +150,24 @@ typedef struct influxdb_kv_pair {
  *
  * influxdb_kv_list_t contains a list of key/value pairs.
  */
-typedef struct influxdb_kv_list_t {
-  influxdb_kv_pair *data;
+typedef struct influxdb_fields_t {
+  influxdb_field_t *data;
   size_t len;
-} influxdb_kv_list_t;
+} influxdb_fields_t;
 
 /*
- * NAME influxdb_kv_list()
+ * NAME influxdb_fields()
  *
  * DESCRIPTION
  *
- * This function takes a pointer to an array of influxdb_kv_pair_t structs and
- * wraps it in an influxdb_kv_list_t with the length of the array so it can be
+ * This function takes a pointer to an array of influxdb_field_t structs and
+ * wraps it in an influxdb_fields_t with the length of the array so it can be
  * used with an influxdb_point_t.
  */
-influxdb_kv_list_t influxdb_kv_list(influxdb_kv_pair *data, size_t len);
+static inline influxdb_fields_t influxdb_fields(influxdb_field_t *data, size_t len) {
+  influxdb_fields_t fields = { data, len };
+  return fields;
+}
 
 /*
  * NAME influxdb_point_t
@@ -113,8 +178,8 @@ influxdb_kv_list_t influxdb_kv_list(influxdb_kv_pair *data, size_t len);
  */
 typedef struct influxdb_point_t {
   const char *name;
-  influxdb_kv_list_t tags;
-  influxdb_kv_list_t fields;
+  influxdb_tags_t tags;
+  influxdb_fields_t fields;
 } influxdb_point_t;
 
 /*

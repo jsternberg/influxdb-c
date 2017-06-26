@@ -8,7 +8,6 @@ include_directories(${CURL_INCLUDE_DIRS})
 
 set(INFLUXDB_SOURCES
   client.c
-  point.c
   protocol.c
   buffer.c
 )
