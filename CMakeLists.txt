@@ -4,18 +4,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(influxdb)
 
 find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS})
+include_directories(${CURL_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/include")
 
+file(GLOB INFLUXDB_HEADERS "include/*.h" "include/**/*.h")
 set(INFLUXDB_SOURCES
-  client.c
-  protocol.c
-  buffer.c
+  src/client.c
+  src/protocol.c
+  src/buffer.c
 )
 
 add_library(influxdb ${INFLUXDB_SOURCES})
 target_link_libraries(influxdb ${CURL_LIBRARIES})
 
-file(GLOB testfiles "*_test.cc")
+file(GLOB testfiles "src/*_test.cc")
 add_executable(influxdb_test "${testfiles}")
 target_link_libraries(influxdb_test influxdb)
 
@@ -23,4 +24,4 @@ include(CTest)
 add_test(NAME influxdb COMMAND influxdb_test)
 
 install(TARGETS influxdb DESTINATION lib)
-install(FILES influxdb.h DESTINATION include)
+install(FILES ${INFLUXDB_HEADERS} DESTINATION include)
