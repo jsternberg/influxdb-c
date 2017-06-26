@@ -22,9 +22,12 @@ TEST_CASE( "write a point - line protocol v1", "[line-protocol]" ) {
   influxdb_protocol_t *protocol = influxdb_protocol_v1();
   REQUIRE( protocol != NULL );
 
+  influxdb_sbuffer_t buf;
+  influxdb_sbuffer_init(&buf);
+
   influxdb_writer_t writer;
-  writer.data = stdout;
-  writer.write = write_to_stream;
+  writer.data = &buf;
+  writer.write = influxdb_sbuffer_write;
 
   influxdb_point_t point;
   memset(&point, 0, sizeof(influxdb_point_t));
@@ -36,15 +39,24 @@ TEST_CASE( "write a point - line protocol v1", "[line-protocol]" ) {
 
   influxdb_protocol_encode(protocol, &writer, &point);
   influxdb_protocol_cleanup(protocol);
+
+  char *result = strndup(buf.data, buf.len);
+  influxdb_sbuffer_destroy(&buf);
+
+  REQUIRE( strcmp(result, "cpu value=2.500000\n") == 0 );
+  free(result);
 }
 
 TEST_CASE( "write a point with tags - line protocol v1", "[line-protocol]" ) {
   influxdb_protocol_t *protocol = influxdb_protocol_v1();
   REQUIRE( protocol != NULL );
 
+  influxdb_sbuffer_t buf;
+  influxdb_sbuffer_init(&buf);
+
   influxdb_writer_t writer;
-  writer.data = stdout;
-  writer.write = write_to_stream;
+  writer.data = &buf;
+  writer.write = influxdb_sbuffer_write;
 
   influxdb_point_t point;
   memset(&point, 0, sizeof(influxdb_point_t));
@@ -61,4 +73,10 @@ TEST_CASE( "write a point with tags - line protocol v1", "[line-protocol]" ) {
 
   influxdb_protocol_encode(protocol, &writer, &point);
   influxdb_protocol_cleanup(protocol);
+
+  char *result = strndup(buf.data, buf.len);
+  influxdb_sbuffer_destroy(&buf);
+
+  REQUIRE( strcmp(result, "cpu,host=server01,region=uswest value=2.500000\n") == 0 );
+  free(result);
 }

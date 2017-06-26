@@ -15,6 +15,8 @@ void influxdb_sbuffer_init(influxdb_sbuffer_t *self);
 
 void influxdb_sbuffer_destroy(influxdb_sbuffer_t *self);
 
+int influxdb_sbuffer_write(void *data, const char *buf, size_t len);
+
 int influxdb_sbuffer_printf(influxdb_sbuffer_t *self, const char * format, ...);
 
 #ifdef __cplusplus

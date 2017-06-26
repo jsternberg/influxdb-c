@@ -10,7 +10,7 @@ file(GLOB INFLUXDB_HEADERS "include/*.h" "include/**/*.h")
 set(INFLUXDB_SOURCES
   src/client.c
   src/protocol.c
-  src/buffer.c
+  src/sbuffer.c
 )
 
 add_library(influxdb ${INFLUXDB_SOURCES})
